@@ -1,0 +1,219 @@
+﻿<div yw-active-menu="Queries"
+     yw-active-title="Queries on ES indexed data and visualization with D3.js"
+     ng-controller="queryContrl">
+    <div ng-show="hasError()">
+        <div class="alert alert-danger alert-dismissible">
+            <button type="button" class="close"
+                    data-dismiss="alert">
+                <span aria-hidden="true">&times;</span></button>
+            <strong>{{errorMessage}}</strong>
+        </div>
+    </div>
+    <div class="row" ng-show="isLoading()">
+        <div class="col-sm-12 text-center">
+            <img src="images/progressring.gif"/>
+            Loading...
+        </div>
+    </div>
+    <div ng-show="!isLoading()">
+        <div class="dropdown">
+          <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            Select Query
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+            <li style="margin:10px"><a  ng-click="queryA()"> Time and location of gun buyers </a></li>
+            <li style="margin:10px"><a  ng-click="queryB()"> Space and time distribution of weapon types</a></li>
+            <li style="margin:10px"><a  ng-click="queryC()"> Temporal distribution of weapon manufacturers</a></li>
+            <li style="margin:10px"><a  ng-click="queryD()"> Seller Activities</a></li>
+          </ul>
+        </div>
+        <hr>
+
+        <div ng-show="isDebug==true && session=='queryA'">
+    
+            <div class="text-center">
+                <h3> Visualization of time and location of highest concentration of buyers.</h3>
+            </div>
+            <h4>Question we are trying to answer: <br>
+                What time-based trends exist in Gun ads? Can you correlate temporal and
+                    spatial properties with buyers? For example can you identify based on ad
+                    time-window and/or based on geospatial area places where people try and
+                    purchase guns on behalf of someone unauthorized to purchase them?
+            </h4>
+            <h6>ES query body</h6>
+            <div class="well well-sm">
+                queryBodyA = {
+                    size: 0,
+                    query: {
+                        simple_query_string: {
+                            query: "looking to buy",
+                            fields: ["description"],
+                            default_operator: "and"
+                        }
+                    },
+                    aggs: {
+                        group_by_date: {
+                            terms: {
+                                field: "availableDate"
+                            },
+                            aggs: {
+                                group_by_area: {
+                                    terms: {
+                                        field: "location"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+            </div>
+            <div class="page-header text-center">
+                <h3>Stacked/Grouped Multi-Bar Chart</h3>
+            </div>
+
+            <div id="chartA">
+                <svg></svg>
+            </div>
+        </div>
+        <div ng-show="isDebug==true && session=='queryB'">
+            <div class="page-header text-center">
+                <h3> Ad concentrations in same time and region </h3>
+            </div>
+            <h4>Question we are trying to answer:<br> Can you identify similar firearms image types (e.g., shotguns) that are sold
+                in the same region and time? Does this indicate influx related to stolen
+                goods?<br>
+            </h4>
+            <h6>ES query body</h6>
+            <div class="well well-sm">
+                queryBodyB2 = {
+                    query: {
+                        filtered: {
+                            filter:{
+                                bool: {
+                                  must: [
+                                    { match: { itemCategory:  weaponType }},
+                                    { match: { state: state   }}
+                                  ]
+                                }
+                            } 
+                        }
+                    },
+                    aggs: {
+                            group_by_location: {
+                                terms: {
+                                    field: "location"
+                                },
+                                aggs: {
+                                    group_by_date: {
+                                        terms: {
+                                            field: "availableDate"
+                                        }
+                                    }
+                                }
+                            }
+                        }   
+                };
+            </div>
+            <h4>Select a state to see highest concentrations at each place, or All for all US.</h4>
+            <div class="dropdown">
+              <button id="stateDropBttn" class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Select State
+                <span class="caret"></span>
+              </button>
+              <ul id="statesDrop" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+
+              </ul>
+            </div>
+            <div id="chartB">
+            </div>
+            </div>
+        <div ng-show="isDebug==true && session=='queryC'">
+            
+            <div class="page-header text-center">
+                <h3> Temporal distribution of weapon manufacturers in ads </h3>
+            </div>
+                <h4>Question we are trying to answer: <br>When a shipment of bulk firearms is stolen, the rate of ads and images
+                    may indicate an increase in sales of that particular make/model – can you
+                    identify these? <br>
+                    Hover over circles to get dates and weapon types
+                </h4>
+                <div class="well well-sm">
+                queryBodyC = {
+                     size: 0,
+                    aggs: {
+                        group_by_date: {
+                            terms: {
+                                field: "availableDate"
+                            },
+                            aggs: {
+                                group_by_type: {
+                                    terms: {
+                                        field: "itemCategory"
+                                    },
+                                    aggs: {
+                                        group_by_manufacturer: {
+                                            terms:{
+                                                field: "itemManufacturer"
+                                            } 
+                                        }
+                                    }     
+                                }
+                            }
+                        }
+                    }
+                };
+                </div>  
+            <h4>Select a weapon type or all.</h4>
+            <div class="dropdown">
+              <button id="typesDropButton" class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Select Weapon Type
+                <span class="caret"></span>
+              </button>
+              <ul id="typesDrop" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+
+              </ul>
+            </div>
+            <div id="chartC">
+                
+            </div>
+            <!--<h3>This is for query C result:</h3>
+            <h4>Result's length = {{listC.length}}</h4>
+            <div ng-repeat="e in listC">
+              {{e}}<br>
+            </div>-->
+        </div>
+        <div ng-show="isDebug==true && session=='queryD'">
+            <div class="page-header text-center">
+                <h3>Dates of sellers registering and count of ads for each date</h3>
+            </div>
+             <h4>
+                Area chart shows ad counts of dates when people signed up online and the count of ads for each date, to represent how active sellers are compared to how long they have been signed up for.
+            </h4>
+             <div class="well well-sm">
+                queryBodyD = {
+                    size:0,
+                    query:{
+                        range : {
+                            sellerStartDate : {
+                                gte: "2011-01-01 00:00:00", 
+                                lte: "now"
+                            }
+                        }
+                    },
+                    
+                    aggs : {
+                        sellers_over_time : {
+                            date_histogram : {
+                                field : "sellerStartDate",
+                                interval : "week"
+                            }
+                        }
+                    }
+                  };
+                </div>  
+            <div id="chartD">
+            </div>
+        </div>
+    </div>
+</div>
