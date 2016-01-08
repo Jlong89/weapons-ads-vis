@@ -1,5 +1,5 @@
-Weapon-ads-visualization
-========================
+Interaction and Visualization of weapon ads dataset on Elasticsearch
+====================================================================
 USC cs572 fall 2015 project, last in a series to crawl, index and visualize ads and posts of firearms on the internet.
 Inspired by the DARPA Memex effort to improve domain specific search, this project allows us to get insight into how guns are sold and bought
 online.
